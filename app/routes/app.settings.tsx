@@ -47,7 +47,7 @@ export default function Settings() {
                   <BlockStack gap="100">
                     <Text as="h2" variant="headingMd">Current Plan</Text>
                     <Text as="p" variant="bodySm" tone="subdued">
-                      Upgrade to unlock unlimited forms and AI features.
+                      Upgrade to unlock unlimited forms and advanced features.
                     </Text>
                   </BlockStack>
                   <Badge tone="info" size="large">Starter — Free</Badge>
@@ -56,7 +56,7 @@ export default function Settings() {
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
                   {[
                     { plan: "Starter", price: "Free", features: ["1 Active Form", "50 Submissions/mo", "Basic Fields", "Honeypot Spam Shield"], current: true, tone: "info" },
-                    { plan: "Professional", price: "$7.99/mo", features: ["Unlimited Forms", "Conditional Logic", "File Uploads", "Email Notifications", "AI Generation"], current: false, tone: "success" },
+                    { plan: "Professional", price: "$7.99/mo", features: ["Unlimited Forms", "Conditional Logic", "File Uploads", "Email Notifications"], current: false, tone: "success" },
                     { plan: "Enterprise", price: "$14.99/mo", features: ["Everything in Pro", "Remove Branding", "Priority Support", "Klaviyo Integration", "CSV Export"], current: false, tone: "attention" },
                   ].map((p) => (
                     <div

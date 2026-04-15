@@ -1,6 +1,6 @@
 # Learn more: https://shopify.dev/docs/apps/tools/cli/configuration
 name = "MakeFast Form Builder"
-client_id = ""
+client_id = "373cfeb54017653257d31930102573a2"
 application_url = ""
 embedded = true
 

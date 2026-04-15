@@ -137,7 +137,7 @@ export default function Dashboard() {
                 }}
                 image="https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png"
               >
-                <p>Use our drag-and-drop builder or let AI generate a form for you in seconds.</p>
+                <p>Use our drag-and-drop builder to create your first form.</p>
               </EmptyState>
             ) : (
               <ResourceList
@@ -187,14 +187,6 @@ export default function Dashboard() {
               <Text as="h2" variant="headingMd">Quick Tips</Text>
               <Divider />
               <InlineStack gap="400" wrap>
-                <Box padding="300" background="bg-surface-secondary" borderRadius="200">
-                  <BlockStack gap="100">
-                    <Text as="p" fontWeight="semibold">🤖 AI Generator</Text>
-                    <Text as="p" variant="bodySm" tone="subdued">
-                      Click "Generate with AI" in any form editor to build forms from plain text.
-                    </Text>
-                  </BlockStack>
-                </Box>
                 <Box padding="300" background="bg-surface-secondary" borderRadius="200">
                   <BlockStack gap="100">
                     <Text as="p" fontWeight="semibold">⚡ Zero Speed Impact</Text>

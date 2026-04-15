@@ -19,7 +19,6 @@ import { FieldPalette } from "../components/builder/FieldPalette";
 import { FieldSettings } from "../components/builder/FieldSettings";
 import { LogicBuilder } from "../components/builder/LogicBuilder";
 import { StyleEditor } from "../components/builder/StyleEditor";
-import { AIPromptModal } from "../components/builder/AIPromptModal";
 import { FormPreview } from "../components/builder/FormPreview";
 
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
@@ -65,16 +64,6 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
     return json({ themeStyle });
   }
 
-  if (intent === "ai_generate") {
-    const prompt = formData.get("prompt") as string;
-    try {
-      const generated = await generateFormFromPrompt(prompt);
-      return json({ generatedForm: generated });
-    } catch (err: any) {
-      return json({ error: err.message }, { status: 500 });
-    }
-  }
-
   return json({ error: "Unknown intent" });
 };
 
@@ -94,7 +83,6 @@ export default function FormEditor() {
   const [form, setForm] = useState<FormConfig>(initialForm as FormConfig);
   const [selectedFieldId, setSelectedFieldId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState(0);
-  const [showAIModal, setShowAIModal] = useState(false);
   const [toast, setToast] = useState<{ message: string; error?: boolean } | null>(null);
   const isSaving = navigation.state !== "idle";
 
@@ -163,20 +151,6 @@ export default function FormEditor() {
     setToast({ message: "Theme colors detected and applied!" });
   }, [submit]);
 
-  // Apply AI-generated form
-  const handleApplyAI = useCallback((generatedForm: FormConfig) => {
-    setForm((f) => ({
-      ...f,
-      title: generatedForm.title || f.title,
-      fields: generatedForm.fields,
-      conditions: generatedForm.conditions,
-      steps: generatedForm.steps,
-      settings: { ...f.settings, ...generatedForm.settings },
-    }));
-    setShowAIModal(false);
-    setToast({ message: "AI form applied! Review and customize it." });
-  }, []);
-
   return (
     <Frame>
       <Page
@@ -195,7 +169,6 @@ export default function FormEditor() {
         }}
         secondaryActions={[
           { content: "💾 Save", onAction: handleSave, loading: isSaving },
-          { content: "🤖 Generate with AI", onAction: () => setShowAIModal(true) },
         ]}
       >
         <Layout>
@@ -306,13 +279,6 @@ export default function FormEditor() {
             </Tabs>
           </Layout.Section>
         </Layout>
-
-        {/* AI Modal */}
-        <AIPromptModal
-          open={showAIModal}
-          onClose={() => setShowAIModal(false)}
-          onApply={handleApplyAI}
-        />
 
         {/* Toast */}
         {toast && (

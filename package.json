@@ -19,7 +19,6 @@
     "postinstall": "prisma generate"
   },
   "dependencies": {
-    "@google/generative-ai": "^0.21.0",
     "@prisma/client": "^5.20.0",
     "@remix-run/node": "^2.15.2",
     "@remix-run/react": "^2.15.2",

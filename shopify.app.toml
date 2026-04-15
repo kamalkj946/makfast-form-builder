@@ -1,0 +1,26 @@
+# Learn more: https://shopify.dev/docs/apps/tools/cli/configuration
+name = "MakeFast Form Builder"
+client_id = ""
+application_url = ""
+embedded = true
+
+[access_scopes]
+scopes = "write_products,read_themes,write_metafields,read_metafields"
+
+[auth]
+redirect_urls = [
+  "https://localhost/auth/callback",
+  "https://localhost/auth/shopify/callback",
+  "https://localhost/api/auth/callback"
+]
+
+[webhooks]
+api_version = "2024-10"
+
+[app_proxy]
+url = ""
+subpath = "makfast"
+prefix = "apps"
+
+[pos]
+embedded = false

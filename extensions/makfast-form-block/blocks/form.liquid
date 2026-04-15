@@ -1,0 +1,156 @@
+{%- comment -%}
+  MakeFast Form Builder — Liquid Block
+  This block is placed in the Shopify Theme Editor.
+  It reads the form config from a shop metafield and renders the form.
+{%- endcomment -%}
+
+{%- assign form_id = block.settings.form_id -%}
+{%- assign forms_json = shop.metafields.makfast.published_forms.value -%}
+{%- assign selected_form = nil -%}
+
+{%- if forms_json != blank -%}
+  {%- for form in forms_json -%}
+    {%- if form.id == form_id -%}
+      {%- assign selected_form = form -%}
+      {%- break -%}
+    {%- endif -%}
+  {%- endfor -%}
+{%- endif -%}
+
+<div {{ block.shopify_attributes }}
+  class="mf-block"
+  style="
+    --mf-font: {{ selected_form.style.fontFamily | default: 'Inter, sans-serif' }};
+    --mf-bg: {{ selected_form.style.backgroundColor | default: '#ffffff' }};
+    --mf-text: {{ selected_form.style.textColor | default: '#1a1a2e' }};
+    --mf-accent: {{ selected_form.style.accentColor | default: '#6c5ce7' }};
+    --mf-btn-bg: {{ selected_form.style.buttonColor | default: '#6c5ce7' }};
+    --mf-btn-text: {{ selected_form.style.buttonTextColor | default: '#ffffff' }};
+    --mf-border: {{ selected_form.style.borderColor | default: '#e0e0e0' }};
+    --mf-radius: {{ selected_form.style.borderRadius | default: 8 }}px;
+    --mf-spacing: {{ selected_form.style.fieldSpacing | default: 16 }}px;
+  "
+>
+  {%- if selected_form == nil -%}
+    <div class="mf-no-form">
+      <p>{{ 'No form selected. Please configure this block in the theme editor.' }}</p>
+    </div>
+
+  {%- else -%}
+    <div
+      class="mf-form-wrapper"
+      data-form-id="{{ selected_form.id }}"
+      data-shop="{{ shop.permanent_domain }}"
+      data-multistep="{{ selected_form.settings.multiStep }}"
+      data-total-steps="{{ selected_form.steps.size }}"
+      data-submit-url="/apps/makfast/submit"
+      data-success-message="{{ selected_form.settings.successMessage | escape }}"
+    >
+      {%- comment -%} Form data injected as JSON for JS engine {%- endcomment -%}
+      <script type="application/json" id="mf-config-{{ selected_form.id }}">
+        {{ selected_form | json }}
+      </script>
+
+      {%- comment -%} Multi-step progress bar {%- endcomment -%}
+      {%- if selected_form.settings.multiStep and selected_form.steps.size > 1 -%}
+        <div class="mf-progress" aria-label="Form progress">
+          <div class="mf-progress-bar" data-steps="{{ selected_form.steps.size }}">
+            <div class="mf-progress-fill" style="width: {{ 100 | divided_by: selected_form.steps.size }}%"></div>
+          </div>
+          <div class="mf-step-label">
+            <span class="mf-step-current">1</span> / <span class="mf-step-total">{{ selected_form.steps.size }}</span>
+          </div>
+        </div>
+      {%- endif -%}
+
+      {%- comment -%} Pre-rendered form HTML (SEO-friendly, zero JS needed for initial paint) {%- endcomment -%}
+      <form
+        class="mf-form"
+        id="mf-form-{{ selected_form.id }}"
+        novalidate
+        data-form-id="{{ selected_form.id }}"
+      >
+        {%- comment -%} Honeypot field — bots fill this, humans don't see it {%- endcomment -%}
+        <div class="mf-hp" aria-hidden="true">
+          <input type="text" name="_hp" tabindex="-1" autocomplete="off" />
+        </div>
+
+        {%- comment -%} Hidden metadata fields {%- endcomment -%}
+        <input type="hidden" name="_formId" value="{{ selected_form.id }}" />
+        <input type="hidden" name="_formTitle" value="{{ selected_form.title | escape }}" />
+        <input type="hidden" name="_shopDomain" value="{{ shop.permanent_domain }}" />
+        {%- if selected_form.settings.notificationEmail -%}
+          <input type="hidden" name="_notificationEmail" value="{{ selected_form.settings.notificationEmail | escape }}" />
+        {%- endif -%}
+
+        {%- comment -%} Render step containers {%- endcomment -%}
+        {%- if selected_form.settings.multiStep -%}
+          {%- for step in selected_form.steps -%}
+            <div class="mf-step{% if forloop.first %} mf-step-active{% endif %}" data-step="{{ forloop.index0 }}">
+              {%- if step.title != blank -%}
+                <h3 class="mf-step-title">{{ step.title }}</h3>
+              {%- endif -%}
+              <div class="mf-grid">
+                {%- for field in selected_form.fields -%}
+                  {%- if field.step == forloop.parentloop.index0 -%}
+                    {%- render 'mf-field', field: field -%}
+                  {%- endif -%}
+                {%- endfor -%}
+              </div>
+            </div>
+          {%- endfor -%}
+        {%- else -%}
+          <div class="mf-grid">
+            {%- for field in selected_form.fields -%}
+              {%- render 'mf-field', field: field -%}
+            {%- endfor -%}
+          </div>
+        {%- endif -%}
+
+        {%- comment -%} Navigation buttons {%- endcomment -%}
+        <div class="mf-actions">
+          {%- if selected_form.settings.multiStep -%}
+            <button type="button" class="mf-btn-back" style="display:none">← Back</button>
+          {%- endif -%}
+          <button type="submit" class="mf-btn-submit">
+            {{ selected_form.settings.submitButtonText | default: 'Submit' }}
+          </button>
+        </div>
+      </form>
+
+      {%- comment -%} Success message (hidden until submit) {%- endcomment -%}
+      <div class="mf-success" style="display:none" role="alert">
+        <div class="mf-success-icon">🎉</div>
+        <p class="mf-success-msg">{{ selected_form.settings.successMessage | escape }}</p>
+      </div>
+
+      {%- comment -%} Custom CSS injected from form style settings {%- endcomment -%}
+      {%- if selected_form.style.customCSS != blank -%}
+        <style>{{ selected_form.style.customCSS }}</style>
+      {%- endif -%}
+    </div>
+  {%- endif -%}
+</div>
+
+<link rel="stylesheet" href="{{ 'makfast-form.css' | asset_url }}">
+<script src="{{ 'makfast-form.js' | asset_url }}" defer></script>
+
+{% schema %}
+{
+  "name": "MakeFast Form",
+  "target": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "form_id",
+      "label": "Form ID",
+      "info": "Copy the Form ID from the MakeFast admin dashboard."
+    }
+  ],
+  "presets": [
+    {
+      "name": "MakeFast Form"
+    }
+  ]
+}
+{% endschema %}

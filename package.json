@@ -14,7 +14,7 @@
     "env": "shopify app env",
     "start": "remix-serve ./build/server/index.js",
     "lint": "eslint --cache --cache-location ./node_modules/.cache/eslint .",
-    "setup": "prisma generate && prisma migrate deploy",
+    "setup": "prisma generate && prisma db push",
     "prisma": "prisma",
     "postinstall": "prisma generate"
   },

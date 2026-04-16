@@ -11,7 +11,6 @@ import { getForm, saveForm, publishFormsToStorefront, loadForms } from "../lib/m
 import type { FormConfig, FormField, Condition } from "../lib/form-engine";
 import { generateId } from "../lib/form-engine";
 import { detectThemeStyle } from "../lib/theme-detector";
-import { generateFormFromPrompt } from "../lib/gemini";
 
 // Builder Components
 import { FormCanvas } from "../components/builder/FormCanvas";

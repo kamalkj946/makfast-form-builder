@@ -1,9 +1,10 @@
 import type { ActionFunctionArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
-import { authenticate } from "../shopify.server";
+import { authenticate, unauthenticated } from "../shopify.server";
 import prisma from "../db.server";
 import { sendSubmissionEmail } from "../lib/resend";
 import { loadForms } from "../lib/metafield-storage";
+import { evaluateAllConditions, validateField } from "../lib/condition-engine";
 
 // ============================================================
 // App Proxy Submission Handler
@@ -78,7 +79,6 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     }
 
     // Use unauthenticated admin to fetch the form config from the shop's metafields safely
-    const { unauthenticated } = await import("../shopify.server");
     const { admin } = await unauthenticated.admin(shopDomain);
     const forms = await loadForms(admin);
     const formConfig = forms.find((f) => f.id === formId);
@@ -91,7 +91,6 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     }
 
     // SERVER-SIDE VALIDATION & LOGIC EVALUATION
-    const { evaluateAllConditions, validateField } = await import("../lib/condition-engine");
     const { hiddenFieldIds, requiredFieldIds } = evaluateAllConditions(formConfig.conditions, data);
     
     const errors: Record<string, string> = {};

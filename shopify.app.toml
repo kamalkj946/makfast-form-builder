@@ -1,7 +1,7 @@
 # Learn more: https://shopify.dev/docs/apps/tools/cli/configuration
 name = "MakeFast Form Builder"
 client_id = "373cfeb54017653257d31930102573a2"
-application_url = ""
+application_url = "https://makfast-form-builder.vercel.app"
 embedded = true
 
 [access_scopes]
@@ -9,6 +9,9 @@ scopes = "write_products,read_themes,write_metafields,read_metafields"
 
 [auth]
 redirect_urls = [
+  "https://makfast-form-builder.vercel.app/auth/callback",
+  "https://makfast-form-builder.vercel.app/auth/shopify/callback",
+  "https://makfast-form-builder.vercel.app/api/auth/callback",
   "https://localhost/auth/callback",
   "https://localhost/auth/shopify/callback",
   "https://localhost/api/auth/callback"
@@ -18,7 +21,7 @@ redirect_urls = [
 api_version = "2024-10"
 
 [app_proxy]
-url = ""
+url = "https://makfast-form-builder.vercel.app/api/submit"
 subpath = "makfast"
 prefix = "apps"
 

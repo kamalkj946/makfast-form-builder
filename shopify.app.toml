@@ -5,7 +5,7 @@ application_url = "https://makfast-form-builder.vercel.app"
 embedded = true
 
 [access_scopes]
-scopes = "write_products,read_themes,write_metafields,read_metafields"
+scopes = "read_themes,read_metafields,write_metafields"
 
 [auth]
 redirect_urls = [

@@ -2,7 +2,6 @@ import type { EntryContext } from "@remix-run/node";
 import { RemixServer } from "@remix-run/react";
 import { isbot } from "isbot";
 import { renderToReadableStream } from "react-dom/server";
-import { addDocumentResponseHeaders } from "./shopify.server";
 
 const ABORT_DELAY = 5_000;
 
@@ -12,7 +11,14 @@ export default async function handleRequest(
   responseHeaders: Headers,
   remixContext: EntryContext
 ) {
-  addDocumentResponseHeaders(request, responseHeaders);
+  // Shopify embedded headers are helpful, but should not hard-crash the app
+  // when a preview domain or temporary env mismatch is hit.
+  try {
+    const { addDocumentResponseHeaders } = await import("./shopify.server");
+    addDocumentResponseHeaders(request, responseHeaders);
+  } catch (error) {
+    console.error("Skipping Shopify document headers:", error);
+  }
   const userAgent = request.headers.get("user-agent") || "";
 
   const body = await renderToReadableStream(

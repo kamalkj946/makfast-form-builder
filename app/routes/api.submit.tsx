@@ -27,7 +27,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
   try {
     // Authenticate via App Proxy (Shopify signs the proxy request)
-    const { storefront } = await authenticate.public.appProxy(request);
+    await authenticate.public.appProxy(request);
 
     const contentType = request.headers.get("content-type") || "";
     let data: Record<string, any> = {};
@@ -56,14 +56,63 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       // Extract all actual form fields (not internal _prefixed fields)
       for (const [key, value] of formData.entries()) {
         if (!key.startsWith("_")) {
-          data[key] = value;
+          // If a key has multiple values (e.g. multiple checkboxes), merge them into an array
+          if (data[key]) {
+            if (Array.isArray(data[key])) {
+              data[key].push(value);
+            } else {
+              data[key] = [data[key], value];
+            }
+          } else {
+            data[key] = value;
+          }
         }
       }
     }
 
-    if (!formId) {
+    if (!formId || !shopDomain) {
       return json(
-        { success: false, error: "Missing form ID" },
+        { success: false, error: "Missing form ID or shop domain" },
+        { status: 400, headers: corsHeaders }
+      );
+    }
+
+    // Use unauthenticated admin to fetch the form config from the shop's metafields safely
+    const { unauthenticated } = await import("../shopify.server");
+    const { admin } = await unauthenticated.admin(shopDomain);
+    const forms = await loadForms(admin);
+    const formConfig = forms.find((f) => f.id === formId);
+
+    if (!formConfig) {
+      return json(
+        { success: false, error: "Form configuration not found" },
+        { status: 404, headers: corsHeaders }
+      );
+    }
+
+    // SERVER-SIDE VALIDATION & LOGIC EVALUATION
+    const { evaluateAllConditions, validateField } = await import("../lib/condition-engine");
+    const { hiddenFieldIds, requiredFieldIds } = evaluateAllConditions(formConfig.conditions, data);
+    
+    const errors: Record<string, string> = {};
+    
+    for (const field of formConfig.fields) {
+      // Don't validate layout fields or hidden fields
+      if (["heading", "paragraph", "divider"].includes(field.type)) continue;
+      if (hiddenFieldIds.has(field.id)) continue;
+      
+      const isRequired = field.required || requiredFieldIds.has(field.id);
+      const value = data[field.id];
+      const error = validateField(value, isRequired, field.validation);
+      
+      if (error) {
+        errors[field.id] = error;
+      }
+    }
+
+    if (Object.keys(errors).length > 0) {
+      return json(
+        { success: false, error: "Validation failed", validationErrors: errors },
         { status: 400, headers: corsHeaders }
       );
     }
@@ -72,7 +121,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     const submission = await prisma.submission.create({
       data: {
         formId,
-        formTitle: data._formTitle || "Form Submission",
+        formTitle: formConfig.title,
         shopDomain,
         data: data,
         customerEmail: data.email || data.Email || null,
@@ -81,21 +130,27 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     });
 
     // Send email notification (fire and forget)
-    try {
-      // Get merchant email from session (best effort)
-      const notificationEmail =
-        data._notificationEmail || `admin@${shopDomain}`;
-
-      if (notificationEmail) {
-        const formTitle = data._formTitle || "Form";
-        // Clean data for email (remove internal fields)
-        const cleanData = Object.fromEntries(
-          Object.entries(data).filter(([k]) => !k.startsWith("_"))
-        );
-        await sendSubmissionEmail(notificationEmail, formTitle, cleanData, shopDomain);
+    if (formConfig.settings.emailNotification) {
+      try {
+        const notificationEmail = formConfig.settings.notificationEmail || `admin@${shopDomain}`;
+        if (notificationEmail) {
+          // Clean data for email (remove files metadata or map IDs to labels for readability)
+          const readableData: Record<string, any> = {};
+          
+          for (const [key, value] of Object.entries(data)) {
+             const fieldConfig = formConfig.fields.find(f => f.id === key);
+             if (fieldConfig) {
+               readableData[fieldConfig.label] = value;
+             } else {
+               readableData[key] = value;
+             }
+          }
+          
+          await sendSubmissionEmail(notificationEmail, formConfig.title, readableData, shopDomain);
+        }
+      } catch (emailErr) {
+        console.error("Email send failed (non-fatal):", emailErr);
       }
-    } catch (emailErr) {
-      console.error("Email send failed (non-fatal):", emailErr);
     }
 
     return json(

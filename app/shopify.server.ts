@@ -8,6 +8,70 @@ import {
 import { PrismaSessionStorage } from "@shopify/shopify-app-session-storage-prisma";
 import prisma from "./db.server";
 
+const prismaSessionStorage = new PrismaSessionStorage(prisma);
+const inMemorySessions = new Map<string, any>();
+
+async function withPrismaFallback<T>(
+  operation: string,
+  prismaCall: () => Promise<T>,
+  fallbackCall: () => Promise<T> | T
+): Promise<T> {
+  try {
+    return await prismaCall();
+  } catch (error) {
+    console.error(
+      `[shopify-session-storage] Prisma ${operation} failed; falling back to in-memory storage.`,
+      error
+    );
+    return await fallbackCall();
+  }
+}
+
+const resilientSessionStorage = {
+  storeSession: async (session: any) =>
+    withPrismaFallback(
+      "storeSession",
+      () => prismaSessionStorage.storeSession(session),
+      async () => {
+        inMemorySessions.set(session.id, session);
+        return true;
+      }
+    ),
+  loadSession: async (id: string) =>
+    withPrismaFallback(
+      "loadSession",
+      () => prismaSessionStorage.loadSession(id),
+      async () => inMemorySessions.get(id)
+    ),
+  deleteSession: async (id: string) =>
+    withPrismaFallback(
+      "deleteSession",
+      () => prismaSessionStorage.deleteSession(id),
+      async () => {
+        inMemorySessions.delete(id);
+        return true;
+      }
+    ),
+  findSessionsByShop: async (shop: string) =>
+    withPrismaFallback(
+      "findSessionsByShop",
+      () => prismaSessionStorage.findSessionsByShop(shop),
+      async () =>
+        Array.from(inMemorySessions.values()).filter(
+          (session) => session.shop === shop
+        )
+    ),
+  deleteSessions: async (ids: string[]) =>
+    withPrismaFallback(
+      "deleteSessions",
+      () => prismaSessionStorage.deleteSessions(ids),
+      async () => {
+        ids.forEach((id) => inMemorySessions.delete(id));
+        return true;
+      }
+    ),
+};
+
 let shopifyInstance: ReturnType<typeof shopifyApp> | null = null;
 
 function getShopify() {
@@ -31,7 +95,7 @@ function getShopify() {
     scopes,
     appUrl,
     authPathPrefix: "/auth",
-    sessionStorage: new PrismaSessionStorage(prisma),
+    sessionStorage: resilientSessionStorage as any,
     distribution: AppDistribution.AppStore,
     webhooks: {
       APP_UNINSTALLED: {

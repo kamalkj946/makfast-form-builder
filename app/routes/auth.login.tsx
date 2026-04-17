@@ -8,6 +8,17 @@ type LoginErrors = {
 };
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
+  if (request.method.toUpperCase() === "HEAD") {
+    return json({ errors: null });
+  }
+
+  if (request.method.toUpperCase() === "GET") {
+    const url = new URL(request.url);
+    if (!url.searchParams.get("shop")) {
+      return json({ errors: null });
+    }
+  }
+
   const errors = (await login(request)) as LoginErrors | undefined;
   return json({ errors: errors ?? null });
 };

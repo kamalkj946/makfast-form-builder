@@ -1,7 +1,8 @@
-import type { EntryContext } from "@remix-run/node";
+import { PassThrough } from "node:stream";
+import { createReadableStreamFromReadable, type EntryContext } from "@remix-run/node";
 import { RemixServer } from "@remix-run/react";
 import { isbot } from "isbot";
-import { renderToReadableStream } from "react-dom/server";
+import { renderToPipeableStream } from "react-dom/server";
 
 const ABORT_DELAY = 5_000;
 
@@ -19,30 +20,43 @@ export default async function handleRequest(
   } catch (error) {
     console.error("Skipping Shopify document headers:", error);
   }
-  const userAgent = request.headers.get("user-agent") || "";
+  const userAgent = request.headers.get("user-agent");
+  const callbackName = isbot(userAgent ?? "") ? "onAllReady" : "onShellReady";
 
-  const body = await renderToReadableStream(
-    <RemixServer
-      context={remixContext}
-      url={request.url}
-      abortDelay={ABORT_DELAY}
-    />,
-    {
-      signal: AbortSignal.timeout(ABORT_DELAY),
-      onError(error: unknown) {
-        responseStatusCode = 500;
-        console.error(error);
-      },
-    }
-  );
+  return new Promise((resolve, reject) => {
+    let didError = false;
 
-  if (isbot(userAgent)) {
-    await body.allReady;
-  }
+    const { pipe, abort } = renderToPipeableStream(
+      <RemixServer
+        context={remixContext}
+        url={request.url}
+        abortDelay={ABORT_DELAY}
+      />,
+      {
+        [callbackName]() {
+          const body = new PassThrough();
+          const stream = createReadableStreamFromReadable(body);
 
-  responseHeaders.set("Content-Type", "text/html");
-  return new Response(body, {
-    headers: responseHeaders,
-    status: responseStatusCode,
+          responseHeaders.set("Content-Type", "text/html");
+          resolve(
+            new Response(stream, {
+              headers: responseHeaders,
+              status: didError ? 500 : responseStatusCode,
+            })
+          );
+
+          pipe(body);
+        },
+        onShellError(error: unknown) {
+          reject(error);
+        },
+        onError(error: unknown) {
+          didError = true;
+          console.error(error);
+        },
+      }
+    );
+
+    setTimeout(abort, ABORT_DELAY);
   });
 }

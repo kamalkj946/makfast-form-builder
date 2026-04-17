@@ -6,10 +6,23 @@ import {
   DeliveryMethod,
 } from "@shopify/shopify-app-remix/server";
 import { PrismaSessionStorage } from "@shopify/shopify-app-session-storage-prisma";
-import prisma from "./db.server";
+import prisma, { ensureDatabaseSchema } from "./db.server";
 
 const prismaSessionStorage = new PrismaSessionStorage(prisma);
 const inMemorySessions = new Map<string, any>();
+
+function isMissingTableError(error: unknown): boolean {
+  const message =
+    typeof error === "object" && error !== null && "message" in error
+      ? String((error as any).message)
+      : String(error);
+
+  return (
+    message.includes('The table `public.Session` does not exist') ||
+    message.includes('relation "Session" does not exist') ||
+    message.includes('relation "Submission" does not exist')
+  );
+}
 
 async function withPrismaFallback<T>(
   operation: string,
@@ -19,6 +32,18 @@ async function withPrismaFallback<T>(
   try {
     return await prismaCall();
   } catch (error) {
+    if (isMissingTableError(error)) {
+      try {
+        await ensureDatabaseSchema();
+        return await prismaCall();
+      } catch (schemaError) {
+        console.error(
+          `[shopify-session-storage] Failed to auto-initialize Prisma schema during ${operation}.`,
+          schemaError
+        );
+      }
+    }
+
     console.error(
       `[shopify-session-storage] Prisma ${operation} failed; falling back to in-memory storage.`,
       error

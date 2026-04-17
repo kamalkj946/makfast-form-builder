@@ -1,6 +1,6 @@
 import type { LoaderFunctionArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
-import prisma from "../db.server";
+import prisma, { ensureDatabaseSchema } from "../db.server";
 
 function mask(value: string) {
   if (value.length <= 6) return value;
@@ -19,6 +19,8 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   }
 
   try {
+    await ensureDatabaseSchema();
+
     const sessions = await prisma.session.findMany({
       where: { shop },
       orderBy: { id: "desc" },
@@ -55,4 +57,3 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     );
   }
 };
-

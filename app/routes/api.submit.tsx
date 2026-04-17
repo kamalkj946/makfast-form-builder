@@ -1,7 +1,7 @@
 import type { ActionFunctionArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { authenticate, unauthenticated } from "../shopify.server";
-import prisma from "../db.server";
+import prisma, { ensureDatabaseSchema } from "../db.server";
 import { sendSubmissionEmail } from "../lib/resend";
 import { loadForms } from "../lib/metafield-storage";
 import { evaluateAllConditions, validateField } from "../lib/condition-engine";
@@ -27,6 +27,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   }
 
   try {
+    await ensureDatabaseSchema();
+
     // Authenticate via App Proxy (Shopify signs the proxy request)
     await authenticate.public.appProxy(request);
 

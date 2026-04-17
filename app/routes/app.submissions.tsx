@@ -7,10 +7,11 @@ import {
 } from "@shopify/polaris";
 import { useState, useCallback } from "react";
 import { authenticate } from "../shopify.server";
-import prisma from "../db.server";
+import prisma, { ensureDatabaseSchema } from "../db.server";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session } = await authenticate.admin(request);
+  await ensureDatabaseSchema();
   const url = new URL(request.url);
   const formId = url.searchParams.get("formId") || undefined;
 
@@ -30,6 +31,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   const { session } = await authenticate.admin(request);
+  await ensureDatabaseSchema();
   const formData = await request.formData();
   const action = formData.get("action");
 

@@ -16,11 +16,18 @@ import polarisStyles from "@shopify/polaris/build/esm/styles.css?url";
 export const links = () => [{ rel: "stylesheet", href: polarisStyles }];
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  return json({ apiKey: process.env.SHOPIFY_API_KEY || "" });
+  const url = new URL(request.url);
+  const host = url.searchParams.get("host") || "";
+  const shop = url.searchParams.get("shop") || "";
+  return json({
+    apiKey: process.env.SHOPIFY_API_KEY || "",
+    host,
+    shop,
+  });
 };
 
 export default function App() {
-  const { apiKey } = useLoaderData<typeof loader>();
+  const { apiKey, host } = useLoaderData<typeof loader>();
 
   return (
     <html lang="en">
@@ -36,7 +43,7 @@ export default function App() {
         <Links />
       </head>
       <body>
-        <AppProvider isEmbeddedApp apiKey={apiKey}>
+        <AppProvider isEmbeddedApp apiKey={apiKey} host={host}>
           <Outlet />
         </AppProvider>
         <ScrollRestoration />

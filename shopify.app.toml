@@ -1,5 +1,6 @@
 # Learn more: https://shopify.dev/docs/apps/tools/cli/configuration
 name = "MakeFast Form Builder"
+handle = "makfast-app-builder"
 client_id = "373cfeb54817653257d31930102573a2"
 application_url = "https://makfast-form-builder.vercel.app"
 embedded = true

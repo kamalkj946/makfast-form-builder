@@ -14,6 +14,7 @@ const shopify = shopifyApp({
   scopes: ["read_themes", "write_themes", "read_products", "write_products"],
   appUrl: process.env.SHOPIFY_APP_URL || "",
   authPathPrefix: "/auth",
+  useOnlineTokens: false,
   sessionStorage: new PrismaSessionStorage(prisma),
   distribution: AppDistribution.AppStore,
   future: {
@@ -28,7 +29,7 @@ const shopify = shopifyApp({
 });
 
 export default shopify;
-export const apiVersion = ApiVersion.April24;
+export const apiVersion = "2024-10";
 export const addDocumentResponseHeaders = shopify.addDocumentResponseHeaders;
 export const authenticate = shopify.authenticate;
 export const unauthenticated = shopify.unauthenticated;

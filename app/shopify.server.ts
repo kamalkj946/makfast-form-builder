@@ -99,8 +99,11 @@ const resilientSessionStorage = {
     ),
 };
 
+let shopifyInstance: ReturnType<typeof shopifyApp> | null = null;
+
 function getShopify() {
-  // Removing instance caching to ensure fresh env vars are always used in serverless/Vercel
+  if (shopifyInstance) return shopifyInstance;
+  
   const apiKey = process.env.SHOPIFY_API_KEY;
   const apiSecretKey = process.env.SHOPIFY_API_SECRET;
   const appUrl = process.env.SHOPIFY_APP_URL;

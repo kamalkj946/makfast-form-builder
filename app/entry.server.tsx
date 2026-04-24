@@ -42,6 +42,7 @@ export default async function handleRequest(
             "Content-Security-Policy",
             "frame-ancestors https://*.myshopify.com https://admin.shopify.com;"
           );
+          responseHeaders.delete("X-Frame-Options");
           resolve(
             new Response(stream, {
               headers: responseHeaders,

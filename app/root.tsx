@@ -17,7 +17,7 @@ export const links = () => [{ rel: "stylesheet", href: polarisStyles }];
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   return json({
-    apiKey: process.env.SHOPIFY_API_KEY || "",
+    apiKey: "373cfeb54817653257d31930102573a2",
   });
 };
 

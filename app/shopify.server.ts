@@ -100,11 +100,13 @@ const resilientSessionStorage = {
 };
 
 let shopifyInstance: ReturnType<typeof shopifyApp> | null = null;
+let lastApiKey: string | undefined;
 
 function getShopify() {
-  if (shopifyInstance) return shopifyInstance;
-  
   const apiKey = process.env.SHOPIFY_API_KEY;
+  if (shopifyInstance && lastApiKey === apiKey) return shopifyInstance;
+  lastApiKey = apiKey;
+  
   const apiSecretKey = process.env.SHOPIFY_API_SECRET;
   const appUrl = process.env.SHOPIFY_APP_URL;
   const scopes = process.env.SCOPES?.split(",").map((s) => s.trim()).filter(Boolean);

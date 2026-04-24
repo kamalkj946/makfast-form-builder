@@ -9,6 +9,7 @@ import {
   useRouteError,
   useLoaderData,
 } from "@remix-run/react";
+import { useEffect } from "react";
 import { AppProvider } from "@shopify/shopify-app-remix/react";
 import { boundary } from "@shopify/shopify-app-remix/server";
 import polarisStyles from "@shopify/polaris/build/esm/styles.css?url";
@@ -38,6 +39,12 @@ export const headers: HeadersFunction = (headersArgs) => {
 
 export default function App() {
   const { apiKey, host, shop } = useLoaderData<typeof loader>();
+
+  useEffect(() => {
+    console.log("[AppBridge-Debug] apiKey:", apiKey);
+    console.log("[AppBridge-Debug] host:", host);
+    console.log("[AppBridge-Debug] shop:", shop);
+  }, [apiKey, host, shop]);
 
   return (
     <html lang="en">

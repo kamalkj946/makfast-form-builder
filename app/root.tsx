@@ -19,7 +19,8 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const apiKey = process.env.SHOPIFY_API_KEY || "";
   const url = new URL(request.url);
   const host = url.searchParams.get("host") || "";
-  return json({ apiKey, host });
+  const shop = url.searchParams.get("shop") || "";
+  return json({ apiKey, host, shop });
 };
 
 export const headers: HeadersFunction = (headersArgs) => {
@@ -36,7 +37,7 @@ export const headers: HeadersFunction = (headersArgs) => {
 };
 
 export default function App() {
-  const { apiKey, host } = useLoaderData<typeof loader>();
+  const { apiKey, host, shop } = useLoaderData<typeof loader>();
 
   return (
     <html lang="en">

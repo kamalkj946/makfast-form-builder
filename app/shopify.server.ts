@@ -33,7 +33,7 @@ const debugSessionStorage: typeof storage = {
 const shopify = shopifyApp({
   apiKey: process.env.SHOPIFY_API_KEY,
   apiSecretKey: process.env.SHOPIFY_API_SECRET || "",
-  apiVersion: ApiVersion.July24,
+  apiVersion: ApiVersion.April24,
   scopes: process.env.SCOPES?.split(","),
   appUrl: process.env.SHOPIFY_APP_URL || "",
   authPathPrefix: "/auth",
@@ -43,6 +43,8 @@ const shopify = shopifyApp({
   future: {
     removeRest: true,
     v3_authenticatePublic: true,
+    v3_lineItemBilling: true,
+    v3_throwResponseException: true,
   },
   ...(process.env.SHOP_CUSTOM_DOMAIN
     ? { customShopDomains: [process.env.SHOP_CUSTOM_DOMAIN] }

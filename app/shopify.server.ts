@@ -10,7 +10,7 @@ import prisma from "./db.server";
 const storage = new PrismaSessionStorage(prisma);
 
 // Adding a wrapper to catch database errors during session operations
-const sessionStorage: typeof storage = {
+const debugSessionStorage: typeof storage = {
   ...storage,
   loadSession: async (id) => {
     try {
@@ -37,7 +37,7 @@ const shopify = shopifyApp({
   scopes: process.env.SCOPES?.split(","),
   appUrl: process.env.SHOPIFY_APP_URL || "",
   authPathPrefix: "/auth",
-  sessionStorage,
+  sessionStorage: debugSessionStorage,
   distribution: AppDistribution.AppStore,
   future: {
     removeRest: true,

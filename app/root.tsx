@@ -16,7 +16,9 @@ import polarisStyles from "@shopify/polaris/build/esm/styles.css?url";
 export const links = () => [{ rel: "stylesheet", href: polarisStyles }];
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  return json({ apiKey: process.env.SHOPIFY_API_KEY || "" });
+  return json({
+    apiKey: process.env.SHOPIFY_API_KEY || "",
+  });
 };
 
 export default function App() {

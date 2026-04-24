@@ -16,9 +16,9 @@ export default async function handleRequest(
   // when a preview domain or temporary env mismatch is hit.
   try {
     const { addDocumentResponseHeaders } = await import("./shopify.server");
-    addDocumentResponseHeaders(request, responseHeaders);
+    await addDocumentResponseHeaders(request, responseHeaders);
   } catch (error) {
-    console.error("Skipping Shopify document headers:", error);
+    console.error("CRITICAL: Skipping Shopify document headers:", error);
   }
   const userAgent = request.headers.get("user-agent");
   const callbackName = isbot(userAgent ?? "") ? "onAllReady" : "onShellReady";

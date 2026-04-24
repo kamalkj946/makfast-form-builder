@@ -52,10 +52,5 @@ export function ErrorBoundary() {
 }
 
 export const headers = (headersArgs: any) => {
-  const headers = boundary.headers(headersArgs);
-  headers.set(
-    "Content-Security-Policy",
-    "frame-ancestors https://*.myshopify.com https://admin.shopify.com;"
-  );
-  return headers;
+  return boundary.headers(headersArgs);
 };

@@ -52,7 +52,25 @@ const shopify = shopifyApp({
 export default shopify;
 export const apiVersion = ApiVersion.July24;
 export const addDocumentResponseHeaders = shopify.addDocumentResponseHeaders;
-export const authenticate = shopify.authenticate;
+export const authenticate = {
+  ...shopify.authenticate,
+  admin: async (request: Request) => {
+    const url = new URL(request.url);
+    console.log(`[auth-debug] Authenticating admin for: ${url.pathname}`);
+    try {
+      const result = await shopify.authenticate.admin(request);
+      console.log(`[auth-debug] Authentication successful for: ${url.pathname}`);
+      return result;
+    } catch (error: any) {
+      if (error instanceof Response && error.status >= 300 && error.status < 400) {
+        console.log(`[auth-debug] Redirect detected: ${error.headers.get("Location")}`);
+      } else {
+        console.error(`[auth-debug] Authentication failed:`, error);
+      }
+      throw error;
+    }
+  },
+};
 export const unauthenticated = shopify.unauthenticated;
 export const login = shopify.login;
 export const registerWebhooks = shopify.registerWebhooks;

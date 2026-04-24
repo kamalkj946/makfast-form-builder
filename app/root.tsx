@@ -19,8 +19,12 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const url = new URL(request.url);
   const host = url.searchParams.get("host") || "";
   const shop = url.searchParams.get("shop") || "";
+  const apiKey = process.env.SHOPIFY_API_KEY || "";
+  
+  console.log(`[root-loader] shop: ${shop}, host: ${host}, apiKey length: ${apiKey.length}`);
+  
   return json({
-    apiKey: process.env.SHOPIFY_API_KEY || "",
+    apiKey,
     host,
     shop,
   });

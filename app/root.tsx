@@ -1,5 +1,3 @@
-import type { HeadersFunction, LoaderFunctionArgs } from "@remix-run/node";
-import { json } from "@remix-run/node";
 import {
   Links,
   Meta,
@@ -9,7 +7,8 @@ import {
   useRouteError,
   useLoaderData,
 } from "@remix-run/react";
-import { useEffect } from "react";
+import type { LoaderFunctionArgs } from "@remix-run/node";
+import { json } from "@remix-run/node";
 import { AppProvider } from "@shopify/shopify-app-remix/react";
 import { boundary } from "@shopify/shopify-app-remix/server";
 import polarisStyles from "@shopify/polaris/build/esm/styles.css?url";
@@ -17,34 +16,11 @@ import polarisStyles from "@shopify/polaris/build/esm/styles.css?url";
 export const links = () => [{ rel: "stylesheet", href: polarisStyles }];
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const apiKey = process.env.SHOPIFY_API_KEY || "";
-  const url = new URL(request.url);
-  const host = url.searchParams.get("host") || "";
-  const shop = url.searchParams.get("shop") || "";
-  return json({ apiKey, host, shop });
-};
-
-export const headers: HeadersFunction = (headersArgs) => {
-  const merged = new Headers(boundary.headers(headersArgs));
-
-  if (!merged.has("Content-Security-Policy")) {
-    merged.set(
-      "Content-Security-Policy",
-      "frame-ancestors https://*.myshopify.com https://admin.shopify.com;"
-    );
-  }
-
-  return merged;
+  return json({ apiKey: process.env.SHOPIFY_API_KEY || "" });
 };
 
 export default function App() {
-  const { apiKey, host, shop } = useLoaderData<typeof loader>();
-
-  useEffect(() => {
-    console.log("[AppBridge-Debug] apiKey:", apiKey);
-    console.log("[AppBridge-Debug] host:", host);
-    console.log("[AppBridge-Debug] shop:", shop);
-  }, [apiKey, host, shop]);
+  const { apiKey } = useLoaderData<typeof loader>();
 
   return (
     <html lang="en">
@@ -60,7 +36,7 @@ export default function App() {
         <Links />
       </head>
       <body>
-        <AppProvider isEmbeddedApp apiKey={apiKey} host={host || undefined}>
+        <AppProvider isEmbeddedApp apiKey={apiKey}>
           <Outlet />
         </AppProvider>
         <ScrollRestoration />
@@ -70,6 +46,11 @@ export default function App() {
   );
 }
 
+// Shopify needs ErrorBoundary to properly render errors inside the UI
 export function ErrorBoundary() {
   return boundary.error(useRouteError());
 }
+
+export const headers = (headersArgs: any) => {
+  return boundary.headers(headersArgs);
+};

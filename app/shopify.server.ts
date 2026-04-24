@@ -62,12 +62,14 @@ const resilientSessionStorage = {
         return true;
       }
     ),
-  loadSession: async (id: string) =>
-    withPrismaFallback(
+  loadSession: async (id: string) => {
+    console.log(`[shopify-session-storage] Loading session: ${id}`);
+    return withPrismaFallback(
       "loadSession",
       () => prismaSessionStorage.loadSession(id),
       async () => inMemorySessions.get(id)
-    ),
+    );
+  },
   deleteSession: async (id: string) =>
     withPrismaFallback(
       "deleteSession",
@@ -97,11 +99,8 @@ const resilientSessionStorage = {
     ),
 };
 
-let shopifyInstance: ReturnType<typeof shopifyApp> | null = null;
-
 function getShopify() {
-  if (shopifyInstance) return shopifyInstance;
-
+  // Removing instance caching to ensure fresh env vars are always used in serverless/Vercel
   const apiKey = process.env.SHOPIFY_API_KEY;
   const apiSecretKey = process.env.SHOPIFY_API_SECRET;
   const appUrl = process.env.SHOPIFY_APP_URL;

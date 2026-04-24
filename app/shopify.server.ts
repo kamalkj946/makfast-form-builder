@@ -135,6 +135,7 @@ function getShopify() {
         getShopify().registerWebhooks({ session });
       },
     },
+    useOnlineTokens: true,
     future: {
       removeRest: true,
       v3_authenticatePublic: true,

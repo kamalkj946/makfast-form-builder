@@ -7,6 +7,29 @@ import {
 import { PrismaSessionStorage } from "@shopify/shopify-app-session-storage-prisma";
 import prisma from "./db.server";
 
+const storage = new PrismaSessionStorage(prisma);
+
+// Adding a wrapper to catch database errors during session operations
+const sessionStorage: typeof storage = {
+  ...storage,
+  loadSession: async (id) => {
+    try {
+      return await storage.loadSession(id);
+    } catch (error) {
+      console.error("DATABASE_ERROR (loadSession):", error);
+      return undefined;
+    }
+  },
+  storeSession: async (session) => {
+    try {
+      return await storage.storeSession(session);
+    } catch (error) {
+      console.error("DATABASE_ERROR (storeSession):", error);
+      return false;
+    }
+  },
+};
+
 const shopify = shopifyApp({
   apiKey: process.env.SHOPIFY_API_KEY,
   apiSecretKey: process.env.SHOPIFY_API_SECRET || "",
@@ -14,7 +37,7 @@ const shopify = shopifyApp({
   scopes: process.env.SCOPES?.split(","),
   appUrl: process.env.SHOPIFY_APP_URL || "",
   authPathPrefix: "/auth",
-  sessionStorage: new PrismaSessionStorage(prisma),
+  sessionStorage,
   distribution: AppDistribution.AppStore,
   future: {
     removeRest: true,

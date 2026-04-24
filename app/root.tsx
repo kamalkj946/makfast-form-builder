@@ -53,7 +53,7 @@ export default function App() {
         <Links />
       </head>
       <body>
-        <AppProvider isEmbeddedApp apiKey={apiKey} host={host}>
+        <AppProvider isEmbeddedApp apiKey={apiKey}>
           <Outlet />
         </AppProvider>
         <ScrollRestoration />

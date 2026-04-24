@@ -135,6 +135,9 @@ function getShopify() {
     },
     future: {
       removeRest: true,
+      v3_authenticatePublic: true,
+      v3_lineItemBilling: true,
+      v3_throwResponseException: true,
     },
     ...(process.env.SHOP_CUSTOM_DOMAIN
       ? { customShopDomains: [process.env.SHOP_CUSTOM_DOMAIN] }

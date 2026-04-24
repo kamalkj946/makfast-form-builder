@@ -17,15 +17,20 @@ export const links = () => [{ rel: "stylesheet", href: polarisStyles }];
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const url = new URL(request.url);
-  const host = url.searchParams.get("host") || "";
+  let host = url.searchParams.get("host");
   const shop = url.searchParams.get("shop") || "";
   const apiKey = process.env.SHOPIFY_API_KEY || "";
-  
+
+  // If host is missing, try to reconstruct it if we have a shop
+  if (!host && shop) {
+    host = btoa(`${shop}/admin`);
+  }
+
   console.log(`[root-loader] shop: ${shop}, host: ${host}, apiKey length: ${apiKey.length}`);
-  
+
   return json({
     apiKey,
-    host,
+    host: host || "",
     shop,
   });
 };

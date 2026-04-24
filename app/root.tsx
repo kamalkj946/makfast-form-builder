@@ -16,27 +16,11 @@ import polarisStyles from "@shopify/polaris/build/esm/styles.css?url";
 export const links = () => [{ rel: "stylesheet", href: polarisStyles }];
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const url = new URL(request.url);
-  let host = url.searchParams.get("host");
-  const shop = url.searchParams.get("shop") || "";
-  const apiKey = process.env.SHOPIFY_API_KEY || "";
-
-  // If host is missing, try to reconstruct it if we have a shop
-  if (!host && shop) {
-    host = btoa(`${shop}/admin`);
-  }
-
-  console.log(`[root-loader] shop: ${shop}, host: ${host}, apiKey length: ${apiKey.length}`);
-
-  return json({
-    apiKey,
-    host: host || "",
-    shop,
-  });
+  return json({ apiKey: process.env.SHOPIFY_API_KEY || "" });
 };
 
 export default function App() {
-  const { apiKey, host } = useLoaderData<typeof loader>();
+  const { apiKey } = useLoaderData<typeof loader>();
 
   return (
     <html lang="en">
@@ -52,7 +36,7 @@ export default function App() {
         <Links />
       </head>
       <body>
-        <AppProvider isEmbeddedApp apiKey={apiKey} host={host}>
+        <AppProvider isEmbeddedApp apiKey={apiKey}>
           <Outlet />
         </AppProvider>
         <ScrollRestoration />
@@ -62,7 +46,6 @@ export default function App() {
   );
 }
 
-// Shopify needs ErrorBoundary to properly render errors inside the UI
 export function ErrorBoundary() {
   return boundary.error(useRouteError());
 }
